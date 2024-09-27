@@ -47,7 +47,10 @@ Xcode GPT Pilot is an AI-powered Xcode extension for intelligent code generation
 
 ### Xcode Extension Setup
 
-1. Open the Xcode project in the `xcode_extension` folder.
+1. Open the Xcode project in the `xcode_extension` folder:
+   ```
+   open xcode_extension/XcodeGPTPilot.xcodeproj
+   ```
 
 2. In Xcode, select the "XcodeGPTPilot" target and choose your development team in the "Signing & Capabilities" tab.
 
@@ -58,6 +61,26 @@ Xcode GPT Pilot is an AI-powered Xcode extension for intelligent code generation
 5. In the new Xcode instance, go to Xcode > Settings > Extensions and make sure "XcodeGPTPilot" is enabled.
 
 6. You should now see the Xcode GPT Pilot commands in the Editor menu when editing a file in Xcode.
+
+### Detailed Xcode Extension Setup
+
+1. Building the Extension:
+   - After opening the Xcode project, ensure you're using the latest Swift version compatible with your Xcode.
+   - If you encounter any build errors, go to File > Packages > Update to Latest Package Versions to update dependencies.
+   - Clean the build folder (Shift + ⌘ + K) before building if you've made significant changes.
+
+2. Running the Extension:
+   - When you run the "XcodeGPTPilot" scheme, it will launch a new instance of Xcode. This is normal and is how Xcode tests extensions.
+   - If the new Xcode instance doesn't launch, check the console for any error messages and ensure your Mac's security settings allow launching new applications.
+
+3. Enabling the Extension:
+   - In the new Xcode instance, if you don't see the Extensions menu, restart Xcode and check again.
+   - If the extension is still not visible, go to System Preferences > Extensions and ensure that Xcode Source Editor extensions are enabled.
+
+4. Troubleshooting:
+   - If changes to the extension code are not reflected, try cleaning the build folder, rebuilding, and relaunching the extension.
+   - Ensure that the Flask backend is running before using the extension. The extension relies on the backend for AI-powered features.
+   - If you encounter permission issues, ensure that Xcode has the necessary permissions in System Preferences > Security & Privacy > Privacy > Developer Tools.
 
 ## Usage
 
@@ -77,6 +100,9 @@ Xcode GPT Pilot is an AI-powered Xcode extension for intelligent code generation
 - If you encounter any issues with the Xcode extension, try cleaning the build folder (Shift + ⌘ + K) and rebuilding the project.
 - Make sure the Flask backend is running and accessible at `http://localhost:5000`.
 - Check the Xcode console for any error messages related to the extension.
+- If the extension is not appearing in the Editor menu, try disabling and re-enabling it in Xcode > Settings > Extensions.
+- For collaboration features, ensure that your network allows WebSocket connections.
+- If you're experiencing slow response times, check your internet connection and the status of the OpenAI API.
 
 ## Contributing
 
