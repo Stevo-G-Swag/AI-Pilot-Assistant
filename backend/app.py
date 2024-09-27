@@ -17,13 +17,27 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
+connected_users = set()
+
 @socketio.on('connect')
 def handle_connect():
     print('Client connected')
+    connected_users.add(request.sid)
+    emit('user_list', list(connected_users), broadcast=True)
 
 @socketio.on('disconnect')
 def handle_disconnect():
     print('Client disconnected')
+    connected_users.remove(request.sid)
+    emit('user_list', list(connected_users), broadcast=True)
+
+@socketio.on('code_update')
+def handle_code_update(data):
+    emit('code_update', data, broadcast=True, include_self=False)
+
+@socketio.on('chat_message')
+def handle_chat_message(data):
+    emit('chat_message', data, broadcast=True)
 
 from routes import *
 

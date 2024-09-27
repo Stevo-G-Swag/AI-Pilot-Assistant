@@ -3,15 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xcode GPT Pilot - WebSocket Test</title>
+    <title>Xcode GPT Pilot - Collaboration Test</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        #status, #user-list, #code-area, #chat-area { margin-bottom: 20px; }
+        textarea { width: 100%; height: 200px; }
+        #chat-messages { height: 200px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; }
+    </style>
 </head>
 <body>
-    <h1>Xcode GPT Pilot - WebSocket Test</h1>
+    <h1>Xcode GPT Pilot - Collaboration Test</h1>
     <div id="status">Connecting...</div>
+    <div id="user-list">Connected users: </div>
+    <div id="code-area">
+        <h2>Collaborative Code Editing</h2>
+        <textarea id="code-editor" placeholder="Type your code here..."></textarea>
+    </div>
+    <div id="chat-area">
+        <h2>Chat</h2>
+        <div id="chat-messages"></div>
+        <input type="text" id="chat-input" placeholder="Type a message...">
+        <button id="send-chat">Send</button>
+    </div>
     <script>
         const socket = io();
         const statusDiv = document.getElementById('status');
+        const userListDiv = document.getElementById('user-list');
+        const codeEditor = document.getElementById('code-editor');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendChatButton = document.getElementById('send-chat');
 
         socket.on('connect', () => {
             statusDiv.textContent = 'Connected to server';
@@ -19,6 +41,39 @@
 
         socket.on('disconnect', () => {
             statusDiv.textContent = 'Disconnected from server';
+        });
+
+        socket.on('user_list', (users) => {
+            userListDiv.textContent = 'Connected users: ' + users.join(', ');
+        });
+
+        socket.on('code_update', (data) => {
+            codeEditor.value = data.code;
+        });
+
+        socket.on('chat_message', (data) => {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = `${data.user}: ${data.message}`;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        codeEditor.addEventListener('input', () => {
+            socket.emit('code_update', { code: codeEditor.value });
+        });
+
+        sendChatButton.addEventListener('click', () => {
+            const message = chatInput.value.trim();
+            if (message) {
+                socket.emit('chat_message', { user: 'User', message: message });
+                chatInput.value = '';
+            }
+        });
+
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendChatButton.click();
+            }
         });
     </script>
 </body>

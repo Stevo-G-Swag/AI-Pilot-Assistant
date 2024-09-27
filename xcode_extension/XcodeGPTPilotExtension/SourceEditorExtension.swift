@@ -1,8 +1,53 @@
 import Foundation
 import XcodeKit
 import SwiftUI
+import SocketIO
 
 class SourceEditorExtension: NSObject, XCSourceEditorExtension {
+    
+    static let shared = SourceEditorExtension()
+    var socket: SocketIOClient?
+    var manager: SocketManager?
+    var connectedUsers: [String] = []
+    
+    override init() {
+        super.init()
+        setupSocket()
+    }
+    
+    func setupSocket() {
+        manager = SocketManager(socketURL: URL(string: "http://localhost:5000")!, config: [.log(true), .compress])
+        socket = manager?.defaultSocket
+        
+        socket?.on(clientEvent: .connect) { data, ack in
+            print("Socket connected")
+        }
+        
+        socket?.on("user_list") { [weak self] data, ack in
+            if let users = data[0] as? [String] {
+                self?.connectedUsers = users
+                NotificationCenter.default.post(name: .connectedUsersUpdated, object: nil)
+            }
+        }
+        
+        socket?.on("code_update") { data, ack in
+            if let codeData = data[0] as? [String: Any],
+               let code = codeData["code"] as? String,
+               let filePath = codeData["file_path"] as? String {
+                NotificationCenter.default.post(name: .codeUpdated, object: nil, userInfo: ["code": code, "file_path": filePath])
+            }
+        }
+        
+        socket?.on("chat_message") { data, ack in
+            if let messageData = data[0] as? [String: Any],
+               let user = messageData["user"] as? String,
+               let message = messageData["message"] as? String {
+                NotificationCenter.default.post(name: .chatMessageReceived, object: nil, userInfo: ["user": user, "message": message])
+            }
+        }
+        
+        socket?.connect()
+    }
     
     func extensionDidFinishLaunching() {
         // If your extension needs to do any setup when it is loaded, implement this optional method.
@@ -24,6 +69,11 @@ class SourceEditorExtension: NSObject, XCSourceEditorExtension {
                 .identifierKey: "com.yourcompany.XcodeGPTPilot.SettingsCommand",
                 .classNameKey: "SettingsCommand",
                 .nameKey: "Settings"
+            ],
+            [
+                .identifierKey: "com.yourcompany.XcodeGPTPilot.CollaborationCommand",
+                .classNameKey: "CollaborationCommand",
+                .nameKey: "Collaboration"
             ]
         ]
     }
@@ -246,6 +296,27 @@ class SettingsCommand: NSObject, XCSourceEditorCommand {
     }
 }
 
+class CollaborationCommand: NSObject, XCSourceEditorCommand {
+    func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
+        DispatchQueue.main.async {
+            let collaborationWindow = NSWindow(
+                contentRect: NSRect(x: 100, y: 100, width: 400, height: 500),
+                styleMask: [.titled, .closable, .miniaturizable, .resizable],
+                backing: .buffered,
+                defer: false
+            )
+            collaborationWindow.title = "Xcode GPT Pilot Collaboration"
+            
+            let collaborationView = CollaborationView(invocation: invocation)
+            let hostingController = NSHostingController(rootView: collaborationView)
+            collaborationWindow.contentView = hostingController.view
+            
+            NSApp.runModal(for: collaborationWindow)
+            completionHandler(nil)
+        }
+    }
+}
+
 struct SettingsView: View {
     @State private var selectedModel = UserDefaults.standard.string(forKey: "SelectedModel") ?? "openai/gpt-4o"
     @State private var models: [AIModel] = []
@@ -303,7 +374,101 @@ struct SettingsView: View {
     }
 }
 
+struct CollaborationView: View {
+    @State private var connectedUsers: [String] = []
+    @State private var chatMessages: [(user: String, message: String)] = []
+    @State private var currentMessage: String = ""
+    @State private var currentCode: String = ""
+    
+    let invocation: XCSourceEditorCommandInvocation
+    
+    init(invocation: XCSourceEditorCommandInvocation) {
+        self.invocation = invocation
+        _currentCode = State(initialValue: invocation.buffer.completeBuffer)
+    }
+    
+    var body: some View {
+        VStack {
+            Text("Connected Users")
+                .font(.headline)
+            List(connectedUsers, id: \.self) { user in
+                Text(user)
+            }
+            .frame(height: 100)
+            
+            Text("Collaborative Code Editing")
+                .font(.headline)
+            TextEditor(text: $currentCode)
+                .font(.system(size: 14, design: .monospaced))
+                .onChange(of: currentCode) { newValue in
+                    SourceEditorExtension.shared.socket?.emit("code_update", ["code": newValue, "file_path": invocation.buffer.contentUTI])
+                }
+            
+            Text("Chat")
+                .font(.headline)
+            List(chatMessages, id: \.message) { message in
+                Text("\(message.user): \(message.message)")
+            }
+            .frame(height: 150)
+            
+            HStack {
+                TextField("Type a message...", text: $currentMessage)
+                Button("Send") {
+                    sendChatMessage()
+                }
+            }
+        }
+        .padding()
+        .onAppear {
+            setupNotifications()
+        }
+        .onDisappear {
+            removeNotifications()
+        }
+    }
+    
+    func setupNotifications() {
+        NotificationCenter.default.addObserver(forName: .connectedUsersUpdated, object: nil, queue: .main) { _ in
+            self.connectedUsers = SourceEditorExtension.shared.connectedUsers
+        }
+        
+        NotificationCenter.default.addObserver(forName: .codeUpdated, object: nil, queue: .main) { notification in
+            if let userInfo = notification.userInfo,
+               let code = userInfo["code"] as? String,
+               let filePath = userInfo["file_path"] as? String,
+               filePath == invocation.buffer.contentUTI {
+                self.currentCode = code
+                self.invocation.buffer.completeBuffer = code
+            }
+        }
+        
+        NotificationCenter.default.addObserver(forName: .chatMessageReceived, object: nil, queue: .main) { notification in
+            if let userInfo = notification.userInfo,
+               let user = userInfo["user"] as? String,
+               let message = userInfo["message"] as? String {
+                self.chatMessages.append((user: user, message: message))
+            }
+        }
+    }
+    
+    func removeNotifications() {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    func sendChatMessage() {
+        guard !currentMessage.isEmpty else { return }
+        SourceEditorExtension.shared.socket?.emit("chat_message", ["user": "Xcode User", "message": currentMessage])
+        currentMessage = ""
+    }
+}
+
 struct AIModel: Codable, Identifiable {
     let id: String
     let name: String
+}
+
+extension Notification.Name {
+    static let connectedUsersUpdated = Notification.Name("connectedUsersUpdated")
+    static let codeUpdated = Notification.Name("codeUpdated")
+    static let chatMessageReceived = Notification.Name("chatMessageReceived")
 }

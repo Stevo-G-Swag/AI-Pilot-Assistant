@@ -75,6 +75,14 @@ def get_available_models():
     ]
     return jsonify(models)
 
+@app.route('/api/code_update', methods=['POST'])
+def api_code_update():
+    data = request.json
+    code = data.get('code', '')
+    file_path = data.get('file_path', '')
+    socketio.emit('code_update', {'code': code, 'file_path': file_path}, broadcast=True)
+    return jsonify({'success': True})
+
 @socketio.on('message')
 def handle_message(message):
     print('Received message:', message)
