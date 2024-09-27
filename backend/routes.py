@@ -1,7 +1,7 @@
 from flask import request, jsonify, render_template
 from app import app, db, socketio
 from models import User, UserPreference
-from ai_services import generate_code, explain_error, answer_question, suggest_refactoring
+from ai_services import generate_code, explain_error, answer_question, suggest_refactoring, recommend_learning_resources
 
 @app.route('/')
 def home():
@@ -41,6 +41,16 @@ def api_refactor():
     model = data.get('model', 'openai/gpt-4o')
     suggestions = suggest_refactoring(code_snippet, model)
     return jsonify({'refactoring_suggestions': suggestions})
+
+@app.route('/api/recommend_resources', methods=['POST'])
+def api_recommend_resources():
+    data = request.json
+    topic = data.get('topic', '')
+    code_context = data.get('code_context', '')
+    user_level = data.get('user_level', 'intermediate')
+    model = data.get('model', 'openai/gpt-4o')
+    recommendations = recommend_learning_resources(topic, code_context, user_level, model)
+    return jsonify({'recommendations': recommendations})
 
 @app.route('/api/user_preferences', methods=['GET', 'POST'])
 def user_preferences():

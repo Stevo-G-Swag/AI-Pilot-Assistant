@@ -81,6 +81,35 @@ def suggest_refactoring(code_snippet: str, model: str = "openai/gpt-4o") -> str:
     """
     return send_request(full_prompt, model)
 
+def recommend_learning_resources(topic: str, code_context: str, user_level: str, model: str = "openai/gpt-4o") -> str:
+    full_prompt = f"""
+    Based on the following information:
+    
+    Topic: {topic}
+    Code Context:
+    {code_context}
+    User Level: {user_level}
+    
+    Recommend learning resources for the user to improve their understanding and skills related to the given topic and code context. 
+    Consider the user's level (beginner, intermediate, or advanced) when making recommendations.
+    
+    Provide a list of 3-5 resources, which may include:
+    1. Official documentation
+    2. Online tutorials or courses
+    3. Books
+    4. Video tutorials
+    5. Code examples or open-source projects
+    
+    For each resource, provide:
+    - Title or name of the resource
+    - A brief description of what the user will learn
+    - Why it's relevant to their current context and skill level
+    - A link or reference to access the resource (if applicable)
+    
+    Format the response as a JSON object with a 'recommendations' key containing an array of resource objects.
+    """
+    return send_request(full_prompt, model)
+
 def send_request(prompt: str, model: str) -> str:
     if model.startswith("openai/"):
         return send_openai_request(prompt, model.split("/")[1])

@@ -74,6 +74,11 @@ class SourceEditorExtension: NSObject, XCSourceEditorExtension {
                 .identifierKey: "com.yourcompany.XcodeGPTPilot.CollaborationCommand",
                 .classNameKey: "CollaborationCommand",
                 .nameKey: "Collaboration"
+            ],
+            [
+                .identifierKey: "com.yourcompany.XcodeGPTPilot.RecommendResourcesCommand",
+                .classNameKey: "RecommendResourcesCommand",
+                .nameKey: "Recommend Learning Resources"
             ]
         ]
     }
@@ -317,6 +322,113 @@ class CollaborationCommand: NSObject, XCSourceEditorCommand {
     }
 }
 
+class RecommendResourcesCommand: NSObject, XCSourceEditorCommand {
+    func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
+        guard let buffer = invocation.buffer else {
+            showAlert(message: "Unable to access buffer")
+            completionHandler(NSError(domain: "XcodeGPTPilot", code: 1, userInfo: [NSLocalizedDescriptionKey: "Unable to access buffer"]))
+            return
+        }
+        
+        let selectedText = buffer.selections.compactMap { $0 as? XCSourceTextRange }.first.flatMap { range in
+            buffer.lines.compactMap { $0 as? String }[range.start.line...range.end.line].joined(separator: "\n")
+        } ?? ""
+        
+        recommendResources(codeContext: selectedText) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let recommendations):
+                    self.showRecommendationsWindow(recommendations: recommendations)
+                    completionHandler(nil)
+                case .failure(let error):
+                    self.showAlert(message: error.localizedDescription)
+                    completionHandler(error)
+                }
+            }
+        }
+    }
+    
+    private func showRecommendationsWindow(recommendations: String) {
+        let recommendationsWindow = NSWindow(
+            contentRect: NSRect(x: 100, y: 100, width: 600, height: 400),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        recommendationsWindow.title = "Learning Resource Recommendations"
+        
+        let recommendationsView = RecommendationsView(recommendations: recommendations)
+        let hostingController = NSHostingController(rootView: recommendationsView)
+        recommendationsWindow.contentView = hostingController.view
+        
+        NSApp.runModal(for: recommendationsWindow)
+    }
+    
+    private func showAlert(message: String) {
+        DispatchQueue.main.async {
+            let alert = NSAlert()
+            alert.messageText = "Xcode GPT Pilot"
+            alert.informativeText = message
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "OK")
+            alert.runModal()
+        }
+    }
+    
+    func recommendResources(codeContext: String, completion: @escaping (Result<String, Error>) -> Void) {
+        guard let url = URL(string: "http://localhost:5000/api/recommend_resources") else {
+            completion(.failure(NSError(domain: "XcodeGPTPilot", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid API URL"])))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let selectedModel = UserDefaults.standard.string(forKey: "SelectedModel") ?? "openai/gpt-4o"
+        let body: [String: Any] = [
+            "topic": "Swift programming",
+            "code_context": codeContext,
+            "user_level": "intermediate",
+            "model": selectedModel
+        ]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(NSError(domain: "XcodeGPTPilot", code: 3, userInfo: [NSLocalizedDescriptionKey: "Network error: \(error.localizedDescription)"])))
+                return
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                completion(.failure(NSError(domain: "XcodeGPTPilot", code: 4, userInfo: [NSLocalizedDescriptionKey: "Invalid response from server"])))
+                return
+            }
+            
+            guard (200...299).contains(httpResponse.statusCode) else {
+                completion(.failure(NSError(domain: "XcodeGPTPilot", code: 5, userInfo: [NSLocalizedDescriptionKey: "Server error: \(httpResponse.statusCode)"])))
+                return
+            }
+            
+            guard let data = data else {
+                completion(.failure(NSError(domain: "XcodeGPTPilot", code: 6, userInfo: [NSLocalizedDescriptionKey: "No data received from server"])))
+                return
+            }
+            
+            do {
+                if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                   let recommendations = json["recommendations"] as? String {
+                    completion(.success(recommendations))
+                } else {
+                    completion(.failure(NSError(domain: "XcodeGPTPilot", code: 7, userInfo: [NSLocalizedDescriptionKey: "Invalid response format from server"])))
+                }
+            } catch {
+                completion(.failure(NSError(domain: "XcodeGPTPilot", code: 8, userInfo: [NSLocalizedDescriptionKey: "Error parsing server response: \(error.localizedDescription)"])))
+            }
+        }.resume()
+    }
+}
+
 struct SettingsView: View {
     @State private var selectedModel = UserDefaults.standard.string(forKey: "SelectedModel") ?? "openai/gpt-4o"
     @State private var models: [AIModel] = []
@@ -459,6 +571,17 @@ struct CollaborationView: View {
         guard !currentMessage.isEmpty else { return }
         SourceEditorExtension.shared.socket?.emit("chat_message", ["user": "Xcode User", "message": currentMessage])
         currentMessage = ""
+    }
+}
+
+struct RecommendationsView: View {
+    let recommendations: String
+    
+    var body: some View {
+        ScrollView {
+            Text(recommendations)
+                .padding()
+        }
     }
 }
 
