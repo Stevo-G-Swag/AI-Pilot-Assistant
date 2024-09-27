@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from app import app, db
 from models import User, UserPreference
-from ai_services import generate_code, explain_error, answer_question
+from ai_services import generate_code, explain_error, answer_question, suggest_refactoring
 
 @app.route('/')
 def home():
@@ -30,6 +30,13 @@ def api_qa():
     context = data.get('context', '')
     answer = answer_question(question, context)
     return jsonify({'answer': answer})
+
+@app.route('/api/refactor', methods=['POST'])
+def api_refactor():
+    data = request.json
+    code_snippet = data.get('code_snippet', '')
+    suggestions = suggest_refactoring(code_snippet)
+    return jsonify({'refactoring_suggestions': suggestions})
 
 @app.route('/api/user_preferences', methods=['GET', 'POST'])
 def user_preferences():

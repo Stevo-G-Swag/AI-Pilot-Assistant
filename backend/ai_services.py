@@ -27,3 +27,21 @@ def explain_error(error_message: str, code_snippet: str) -> str:
 def answer_question(question: str, context: str) -> str:
     full_prompt = f"Context: {context}\n\nQuestion: {question}\n\nAnswer:"
     return send_openai_request(full_prompt)
+
+def suggest_refactoring(code_snippet: str) -> str:
+    full_prompt = f"""
+    Analyze the following code snippet and suggest advanced refactoring improvements:
+    
+    {code_snippet}
+    
+    Consider the following aspects in your suggestions:
+    1. Code readability and maintainability
+    2. Performance optimizations
+    3. Design patterns that could be applied
+    4. Potential bugs or edge cases
+    5. Adherence to SOLID principles
+    6. Testability improvements
+    
+    Provide detailed explanations for each suggestion, including code examples where appropriate.
+    """
+    return send_openai_request(full_prompt)
