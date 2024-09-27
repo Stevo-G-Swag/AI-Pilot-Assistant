@@ -284,7 +284,7 @@ class SettingsCommand: NSObject, XCSourceEditorCommand {
     func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
         DispatchQueue.main.async {
             let settingsWindow = NSWindow(
-                contentRect: NSRect(x: 100, y: 100, width: 300, height: 200),
+                contentRect: NSRect(x: 100, y: 100, width: 400, height: 400),
                 styleMask: [.titled, .closable, .miniaturizable, .resizable],
                 backing: .buffered,
                 defer: false
@@ -432,6 +432,9 @@ class RecommendResourcesCommand: NSObject, XCSourceEditorCommand {
 struct SettingsView: View {
     @State private var selectedModel = UserDefaults.standard.string(forKey: "SelectedModel") ?? "openai/gpt-4o"
     @State private var models: [AIModel] = []
+    @State private var userPreferences: [String: String] = [:]
+    @State private var newPreferenceKey = ""
+    @State private var newPreferenceValue = ""
     
     var body: some View {
         VStack(spacing: 20) {
@@ -445,15 +448,36 @@ struct SettingsView: View {
             }
             .pickerStyle(MenuPickerStyle())
             
+            List {
+                ForEach(Array(userPreferences.keys), id: \.self) { key in
+                    HStack {
+                        Text(key)
+                        Spacer()
+                        Text(userPreferences[key] ?? "")
+                    }
+                }
+                .onDelete(perform: deletePreference)
+            }
+            .frame(height: 100)
+            
+            HStack {
+                TextField("Preference Key", text: $newPreferenceKey)
+                TextField("Preference Value", text: $newPreferenceValue)
+                Button("Add") {
+                    addPreference()
+                }
+            }
+            
             Button("Save") {
-                UserDefaults.standard.set(selectedModel, forKey: "SelectedModel")
+                savePreferences()
                 NSApp.stopModal()
             }
         }
         .padding()
-        .frame(width: 300, height: 200)
+        .frame(width: 400, height: 400)
         .onAppear {
             fetchAvailableModels()
+            fetchUserPreferences()
         }
     }
     
@@ -483,6 +507,72 @@ struct SettingsView: View {
                 print("Error decoding models: \(error.localizedDescription)")
             }
         }.resume()
+    }
+    
+    private func fetchUserPreferences() {
+        guard let url = URL(string: "http://localhost:5000/api/user_preferences?user_id=1") else {
+            print("Invalid URL")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("Error fetching user preferences: \(error.localizedDescription)")
+                return
+            }
+            
+            guard let data = data else {
+                print("No data received")
+                return
+            }
+            
+            do {
+                let preferences = try JSONDecoder().decode([Preference].self, from: data)
+                DispatchQueue.main.async {
+                    self.userPreferences = Dictionary(uniqueKeysWithValues: preferences.map { ($0.key, $0.value) })
+                }
+            } catch {
+                print("Error decoding user preferences: \(error.localizedDescription)")
+            }
+        }.resume()
+    }
+    
+    private func addPreference() {
+        guard !newPreferenceKey.isEmpty && !newPreferenceValue.isEmpty else { return }
+        userPreferences[newPreferenceKey] = newPreferenceValue
+        newPreferenceKey = ""
+        newPreferenceValue = ""
+    }
+    
+    private func deletePreference(at offsets: IndexSet) {
+        let keysToDelete = offsets.map { Array(userPreferences.keys)[$0] }
+        for key in keysToDelete {
+            userPreferences.removeValue(forKey: key)
+        }
+    }
+    
+    private func savePreferences() {
+        UserDefaults.standard.set(selectedModel, forKey: "SelectedModel")
+        
+        guard let url = URL(string: "http://localhost:5000/api/user_preferences") else {
+            print("Invalid URL")
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        for (key, value) in userPreferences {
+            let body: [String: Any] = ["user_id": 1, "key": key, "value": value]
+            request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+            
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                if let error = error {
+                    print("Error saving preference: \(error.localizedDescription)")
+                }
+            }.resume()
+        }
     }
 }
 
@@ -588,6 +678,11 @@ struct RecommendationsView: View {
 struct AIModel: Codable, Identifiable {
     let id: String
     let name: String
+}
+
+struct Preference: Codable {
+    let key: String
+    let value: String
 }
 
 extension Notification.Name {
