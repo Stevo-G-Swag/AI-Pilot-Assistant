@@ -12,7 +12,8 @@ def api_generate_code():
     data = request.json
     context = data.get('context', '')
     prompt = data.get('prompt', '')
-    generated_code = generate_code(context, prompt)
+    model = data.get('model', 'openai/gpt-4o')
+    generated_code = generate_code(context, prompt, model)
     return jsonify({'generated_code': generated_code})
 
 @app.route('/api/debug_assist', methods=['POST'])
@@ -20,7 +21,8 @@ def api_debug_assist():
     data = request.json
     error_message = data.get('error_message', '')
     code_snippet = data.get('code_snippet', '')
-    explanation = explain_error(error_message, code_snippet)
+    model = data.get('model', 'openai/gpt-4o')
+    explanation = explain_error(error_message, code_snippet, model)
     return jsonify({'explanation': explanation})
 
 @app.route('/api/qa', methods=['POST'])
@@ -28,14 +30,16 @@ def api_qa():
     data = request.json
     question = data.get('question', '')
     context = data.get('context', '')
-    answer = answer_question(question, context)
+    model = data.get('model', 'openai/gpt-4o')
+    answer = answer_question(question, context, model)
     return jsonify({'answer': answer})
 
 @app.route('/api/refactor', methods=['POST'])
 def api_refactor():
     data = request.json
     code_snippet = data.get('code_snippet', '')
-    suggestions = suggest_refactoring(code_snippet)
+    model = data.get('model', 'openai/gpt-4o')
+    suggestions = suggest_refactoring(code_snippet, model)
     return jsonify({'refactoring_suggestions': suggestions})
 
 @app.route('/api/user_preferences', methods=['GET', 'POST'])
@@ -59,3 +63,14 @@ def user_preferences():
         
         db.session.commit()
         return jsonify({'message': 'Preference saved successfully'})
+
+@app.route('/api/models', methods=['GET'])
+def get_available_models():
+    models = [
+        {"id": "openai/gpt-4o", "name": "OpenAI GPT-4o"},
+        {"id": "openai/gpt-4o-mini", "name": "OpenAI GPT-4o Mini"},
+        {"id": "openrouter/anthropic/claude-2", "name": "Anthropic Claude 2"},
+        {"id": "huggingface/microsoft/phi-2", "name": "Microsoft Phi-2"},
+        {"id": "github/copilot-chat", "name": "GitHub Copilot"}
+    ]
+    return jsonify(models)

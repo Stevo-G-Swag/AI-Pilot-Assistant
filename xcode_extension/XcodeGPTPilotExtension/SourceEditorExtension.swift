@@ -1,5 +1,6 @@
 import Foundation
 import XcodeKit
+import SwiftUI
 
 class SourceEditorExtension: NSObject, XCSourceEditorExtension {
     
@@ -18,6 +19,11 @@ class SourceEditorExtension: NSObject, XCSourceEditorExtension {
                 .identifierKey: "com.yourcompany.XcodeGPTPilot.RefactorCodeCommand",
                 .classNameKey: "RefactorCodeCommand",
                 .nameKey: "Suggest Refactoring"
+            ],
+            [
+                .identifierKey: "com.yourcompany.XcodeGPTPilot.SettingsCommand",
+                .classNameKey: "SettingsCommand",
+                .nameKey: "Settings"
             ]
         ]
     }
@@ -82,7 +88,8 @@ class SourceEditorCommand: NSObject, XCSourceEditorCommand {
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let body: [String: Any] = ["context": context, "prompt": "Generate code based on this context"]
+        let selectedModel = UserDefaults.standard.string(forKey: "SelectedModel") ?? "openai/gpt-4o"
+        let body: [String: Any] = ["context": context, "prompt": "Generate code based on this context", "model": selectedModel]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         
         URLSession.shared.dataTask(with: request) { data, response, error in
@@ -179,7 +186,8 @@ class RefactorCodeCommand: NSObject, XCSourceEditorCommand {
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let body: [String: Any] = ["code_snippet": codeSnippet]
+        let selectedModel = UserDefaults.standard.string(forKey: "SelectedModel") ?? "openai/gpt-4o"
+        let body: [String: Any] = ["code_snippet": codeSnippet, "model": selectedModel]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         
         URLSession.shared.dataTask(with: request) { data, response, error in
@@ -215,4 +223,87 @@ class RefactorCodeCommand: NSObject, XCSourceEditorCommand {
             }
         }.resume()
     }
+}
+
+class SettingsCommand: NSObject, XCSourceEditorCommand {
+    func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
+        DispatchQueue.main.async {
+            let settingsWindow = NSWindow(
+                contentRect: NSRect(x: 100, y: 100, width: 300, height: 200),
+                styleMask: [.titled, .closable, .miniaturizable, .resizable],
+                backing: .buffered,
+                defer: false
+            )
+            settingsWindow.title = "Xcode GPT Pilot Settings"
+            
+            let settingsView = SettingsView()
+            let hostingController = NSHostingController(rootView: settingsView)
+            settingsWindow.contentView = hostingController.view
+            
+            NSApp.runModal(for: settingsWindow)
+            completionHandler(nil)
+        }
+    }
+}
+
+struct SettingsView: View {
+    @State private var selectedModel = UserDefaults.standard.string(forKey: "SelectedModel") ?? "openai/gpt-4o"
+    @State private var models: [AIModel] = []
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("Xcode GPT Pilot Settings")
+                .font(.title)
+            
+            Picker("Select AI Model", selection: $selectedModel) {
+                ForEach(models) { model in
+                    Text(model.name).tag(model.id)
+                }
+            }
+            .pickerStyle(MenuPickerStyle())
+            
+            Button("Save") {
+                UserDefaults.standard.set(selectedModel, forKey: "SelectedModel")
+                NSApp.stopModal()
+            }
+        }
+        .padding()
+        .frame(width: 300, height: 200)
+        .onAppear {
+            fetchAvailableModels()
+        }
+    }
+    
+    private func fetchAvailableModels() {
+        guard let url = URL(string: "http://localhost:5000/api/models") else {
+            print("Invalid URL")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("Error fetching models: \(error.localizedDescription)")
+                return
+            }
+            
+            guard let data = data else {
+                print("No data received")
+                return
+            }
+            
+            do {
+                let decodedModels = try JSONDecoder().decode([AIModel].self, from: data)
+                DispatchQueue.main.async {
+                    self.models = decodedModels
+                }
+            } catch {
+                print("Error decoding models: \(error.localizedDescription)")
+            }
+        }.resume()
+    }
+}
+
+struct AIModel: Codable, Identifiable {
+    let id: String
+    let name: String
 }
