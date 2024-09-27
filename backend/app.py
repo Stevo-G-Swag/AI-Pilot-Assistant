@@ -1,8 +1,8 @@
 import os
-from flask import Flask
+from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, emit
 
 class Base(DeclarativeBase):
     pass
