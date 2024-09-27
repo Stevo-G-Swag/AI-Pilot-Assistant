@@ -13,4 +13,5 @@ dependencies = [
     "litellm",
     "huggingface-hub",
     "pygithub",
+    "flask-socketio>=5.3.7",
 ]

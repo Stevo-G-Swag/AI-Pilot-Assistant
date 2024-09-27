@@ -1,11 +1,11 @@
-from flask import request, jsonify
-from app import app, db
+from flask import request, jsonify, render_template
+from app import app, db, socketio
 from models import User, UserPreference
 from ai_services import generate_code, explain_error, answer_question, suggest_refactoring
 
 @app.route('/')
 def home():
-    return jsonify({"message": "Welcome to Xcode GPT Pilot API"}), 200
+    return render_template('index.html')
 
 @app.route('/api/generate_code', methods=['POST'])
 def api_generate_code():
@@ -74,3 +74,8 @@ def get_available_models():
         {"id": "github/copilot-chat", "name": "GitHub Copilot"}
     ]
     return jsonify(models)
+
+@socketio.on('message')
+def handle_message(message):
+    print('Received message:', message)
+    socketio.emit('message', message)
