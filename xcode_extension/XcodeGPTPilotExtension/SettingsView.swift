@@ -1,12 +1,23 @@
 import SwiftUI
 
+// Add the following struct definitions at the top:
+struct AIModel: Identifiable, Decodable {
+    let id: String
+    let name: String
+}
+
+struct Preference: Decodable {
+    let key: String
+    let value: String
+}
+
 struct SettingsView: View {
     @State private var selectedModel = UserDefaults.standard.string(forKey: "SelectedModel") ?? "openai/gpt-4o"
     @State private var models: [AIModel] = []
     @State private var userPreferences: [String: String] = [:]
     @State private var newPreferenceKey = ""
     @State private var newPreferenceValue = ""
-    
+
     var body: some View {
         NavigationView {
             List {
@@ -38,10 +49,10 @@ struct SettingsView: View {
                     }
                 }
             }
-            .listStyle(InsetGroupedListStyle())
+            .listStyle(SidebarListStyle()) // Replaced 'InsetGroupedListStyle' with 'SidebarListStyle'
             .navigationTitle("Settings")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .automatic) { // Changed from 'navigationBarTrailing' to '.automatic'
                     Button("Save") {
                         savePreferences()
                         NSApp.stopModal()

@@ -1,17 +1,17 @@
 import SwiftUI
-import XcodeKit
+import XcodeKit // Add this line
 
 struct CodeGenerationView: View {
+    var selectedText: String
     @State private var context: String = ""
     @State private var prompt: String = ""
     @State private var generatedCode: String = ""
     @State private var isGenerating: Bool = false
     
-    let invocation: XCSourceEditorCommandInvocation
-    
+    // Update initializer
     init(invocation: XCSourceEditorCommandInvocation) {
-        self.invocation = invocation
-        _context = State(initialValue: getSelectedText(from: invocation))
+        self.selectedText = CodeGenerationHelper.getSelectedText(from: invocation)
+        // ... initialize other properties if needed ...
     }
     
     var body: some View {

@@ -1,5 +1,5 @@
 import SwiftUI
-import XcodeKit
+import XcodeKit // Add this line if the file uses XcodeKit types
 
 struct CollaborationView: View {
     @State private var connectedUsers: [String] = []
