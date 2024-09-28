@@ -30,7 +30,7 @@
             <array>
                 <dict>
                     <key>XCSourceEditorCommandClassName</key>
-                    <string>$(PRODUCT_MODULE_NAME).SourceEditorCommand</string>
+                    <string>$(PRODUCT_MODULE_NAME).GenerateCodeCommand</string>
                     <key>XCSourceEditorCommandIdentifier</key>
                     <string>$(PRODUCT_BUNDLE_IDENTIFIER).GenerateCodeCommand</string>
                     <key>XCSourceEditorCommandName</key>

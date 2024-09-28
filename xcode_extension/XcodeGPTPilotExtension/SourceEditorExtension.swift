@@ -1,22 +1,20 @@
 import Foundation
 import SwiftUI
-import XcodeKit // Ensure this line is present
+import XcodeKit
 
-class SourceEditorExtension: NSObject {
-    // Removed XCSourceEditorExtension conformance
+class SourceEditorExtension: NSObject, XCSourceEditorExtension {
+    // Add any extension-wide setup here if needed
 }
 
 class SourceEditorCommand: NSObject, XCSourceEditorCommand {
-    // Removed XCSourceEditorCommand conformance
-    func perform(with invocation: Any, completionHandler: @escaping (Error?) -> Void ) -> Void {
+    func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
         // Implement command here
         completionHandler(nil)
     }
 }
 
-class GenerateCodeCommand: NSObject {
-    // Removed XCSourceEditorCommand conformance
-    func perform(with invocation: Any, completionHandler: @escaping (Error?) -> Void ) -> Void {
+class GenerateCodeCommand: NSObject, XCSourceEditorCommand {
+    func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
         DispatchQueue.main.async {
             let codeGenerationView = CodeGenerationView(invocation: invocation)
             let hostingController = NSHostingController(rootView: codeGenerationView)
@@ -29,9 +27,8 @@ class GenerateCodeCommand: NSObject {
     }
 }
 
-class RefactorCodeCommand: NSObject {
-    // Removed XCSourceEditorCommand conformance
-    func perform(with invocation: Any, completionHandler: @escaping (Error?) -> Void ) -> Void {
+class RefactorCodeCommand: NSObject, XCSourceEditorCommand {
+    func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
         DispatchQueue.main.async {
             let refactorView = RefactorView(invocation: invocation)
             let hostingController = NSHostingController(rootView: refactorView)
@@ -44,9 +41,8 @@ class RefactorCodeCommand: NSObject {
     }
 }
 
-class SettingsCommand: NSObject {
-    // Removed XCSourceEditorCommand conformance
-    func perform(with invocation: Any, completionHandler: @escaping (Error?) -> Void ) -> Void {
+class SettingsCommand: NSObject, XCSourceEditorCommand {
+    func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
         DispatchQueue.main.async {
             let settingsView = SettingsView()
             let hostingController = NSHostingController(rootView: settingsView)
@@ -59,9 +55,8 @@ class SettingsCommand: NSObject {
     }
 }
 
-class CollaborationCommand: NSObject {
-    // Removed XCSourceEditorCommand conformance
-    func perform(with invocation: Any, completionHandler: @escaping (Error?) -> Void ) -> Void {
+class CollaborationCommand: NSObject, XCSourceEditorCommand {
+    func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
         DispatchQueue.main.async {
             let collaborationView = CollaborationView(invocation: invocation)
             let hostingController = NSHostingController(rootView: collaborationView)
@@ -74,9 +69,8 @@ class CollaborationCommand: NSObject {
     }
 }
 
-class RecommendResourcesCommand: NSObject {
-    // Removed XCSourceEditorCommand conformance
-    func perform(with invocation: Any, completionHandler: @escaping (Error?) -> Void) {
+class RecommendResourcesCommand: NSObject, XCSourceEditorCommand {
+    func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
         DispatchQueue.main.async {
             let recommendationsView = RecommendationsView(invocation: invocation)
             let hostingController = NSHostingController(rootView: recommendationsView)
