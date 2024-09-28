@@ -1,0 +1,16 @@
+You are tasked with creating a detailed project specification for the application "{{ state.branch.project.name }}".
+
+**Project Information:**
+
+{{ collected_information }}
+
+**Instructions:**
+
+- Based on the information provided, write a clear and comprehensive project specification.
+- Include all relevant details, features, and requirements.
+- Organize the specification into logical sections.
+
+**Important:**
+
+- Use professional language.
+- Do not include any placeholders or questions.

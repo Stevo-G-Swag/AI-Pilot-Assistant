@@ -1,0 +1,55 @@
+You are reviewing code changes made by a junior developer to the file `{{ file_name }}` as part of the following task:
+
+**Task Description:**
+
+{{ task_description }}
+
+**Development Instructions:**
+
+{{ instructions }}
+
+**Original Content of `{{ file_name }}`:**
+
+```
+{{ old_content }}
+```
+
+**Changes Made (Diff):**
+
+{% for hunk in hunks %}
+**Hunk {{ loop.index }}:**
+
+```diff
+{{ hunk }}
+```
+{% endfor %}
+
+**Review Guidelines:**
+
+- For each hunk, decide whether to **accept**, **reject**, or **request rework**.
+- Base your decision on correctness, coding standards, and adherence to the instructions.
+- Provide a brief reason for your decision on each hunk.
+- If rework is needed, specify what needs to be changed.
+
+**Output Format:**
+
+Provide a JSON object with the following structure:
+
+```json
+{
+  "decisions": [
+    {
+      "hunk_number": <number>,
+      "decision": "accept" | "reject" | "rework",
+      "reason": "<brief reason>"
+    },
+    // Repeat for each hunk
+  ],
+  "overall_feedback": "<Any additional comments or feedback>"
+}
+```
+
+**Important:**
+
+- Do not include any text outside of the JSON object.
+- Ensure the JSON is properly formatted.

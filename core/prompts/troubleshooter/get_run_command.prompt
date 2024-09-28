@@ -1,0 +1,15 @@
+As a Troubleshooter, determine the command needed to run the application "{{ state.branch.project.name }}" for testing.
+
+**Project Details:**
+
+{{ state.specification }}
+
+**Instructions:**
+
+- Provide the exact command to run the application.
+- Do not include explanations or additional setup commands.
+- Assume all dependencies have been installed.
+
+**Output Format:**
+
+Simply provide the command as plain text, without any code blocks or additional formatting.

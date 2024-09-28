@@ -1,0 +1,23 @@
+You are a Tech Lead tasked with breaking down an epic into specific tasks. The epic description is:
+
+{{ epic_description }}
+
+Your task is to create a list of tasks that will implement this epic. For each task, provide:
+1. A clear description of the task
+2. A proposed solution for implementing the task
+3. A review of the proposed solution, considering potential issues or improvements
+
+Please output your response in the following JSON format:
+
+{
+  "plan": [
+    {
+      "description": "Task description",
+      "solution": "Proposed solution",
+      "review": "Review of the solution"
+    },
+    // ... more tasks
+  ]
+}
+
+Ensure that your task breakdown is comprehensive and covers all aspects needed to implement the epic.

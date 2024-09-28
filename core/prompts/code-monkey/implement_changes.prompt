@@ -1,0 +1,38 @@
+You are an experienced software developer working on a project. Your task is to implement changes to the file `{{ file_name }}` based on the development instructions provided.
+
+**Development Instructions:**
+
+{{ instructions }}
+
+{% if rework_feedback is defined %}
+**Feedback from Previous Review:**
+
+{{ rework_feedback }}
+
+You must address this feedback in your updated implementation.
+{% endif %}
+
+{% if file_content %}
+**Current Content of `{{ file_name }}`:**
+
+```
+{{ file_content }}
+```
+{% else %}
+The file `{{ file_name }}` does not exist yet. You need to create it.
+{% endif %}
+
+**Requirements:**
+
+- Follow all coding standards and best practices.
+- Ensure your changes are correct and do not introduce errors.
+- Do not include any explanations or notes in your response.
+- **Output Only the Complete Updated Content of `{{ file_name }}`.**
+
+**Output Format:**
+
+Provide the full content of the updated `{{ file_name }}` enclosed within code block delimiters, specifying the language, like so:
+
+\`\`\`{{ language_of_file(file_name) }}
+<full updated content of the file>
+\`\`\`

@@ -1,0 +1,19 @@
+2024-09-27 02:02:43,261 DEBUG [core.db.setup] Running database migrations for sqlite:///pythagora.db (config: /Users/marbeanai/GPT-Pilot VS Code Insider/gpt-pilot/core/db/alembic.ini)
+2024-09-27 02:03:16,421 DEBUG [core.db.setup] Running database migrations for sqlite:///pythagora.db (config: /Users/marbeanai/GPT-Pilot VS Code Insider/gpt-pilot/core/db/alembic.ini)
+2024-09-27 02:03:16,615 DEBUG [core.db.session] Connected to database sqlite+aiosqlite:///pythagora.db
+2024-09-27 02:03:24,320 DEBUG [core.db.setup] Running database migrations for sqlite:///pythagora.db (config: /Users/marbeanai/GPT-Pilot VS Code Insider/gpt-pilot/core/db/alembic.ini)
+2024-09-27 02:03:24,354 DEBUG [core.ui.ipc_client] Connecting to IPC server at localhost:8125
+2024-09-27 02:03:30,942 DEBUG [core.llm.base] Calling openai model gpt-4o-2024-05-13 (temp=0.5), prompt length: 0.1 KB
+2024-09-27 02:03:31,174 DEBUG [core.llm.base] Calling openai model gpt-4-0125-preview (temp=0.0), prompt length: 0.1 KB
+2024-09-27 02:03:31,396 DEBUG [core.llm.base] Calling openai model gpt-3.5-turbo (temp=0.0), prompt length: 0.1 KB
+2024-09-27 02:03:31,641 DEBUG [core.llm.base] Calling anthropic model claude-3-5-sonnet-20240620 (temp=0.5), prompt length: 0.1 KB
+2024-09-27 02:03:34,417 DEBUG [core.llm.base] Total openai response time 3.24s, 30 prompt tokens, 1 completion tokens used
+2024-09-27 02:03:34,419 INFO [core.cli.main] API check for openai gpt-4-0125-preview succeeded.
+2024-09-27 02:03:34,420 DEBUG [core.llm.base] Total anthropic response time 2.78s, 31 prompt tokens, 4 completion tokens used
+2024-09-27 02:03:34,421 INFO [core.cli.main] API check for anthropic claude-3-5-sonnet-20240620 succeeded.
+2024-09-27 02:03:34,421 DEBUG [core.llm.base] Total openai response time 3.02s, 30 prompt tokens, 1 completion tokens used
+2024-09-27 02:03:34,421 INFO [core.cli.main] API check for openai gpt-3.5-turbo succeeded.
+2024-09-27 02:03:34,431 DEBUG [core.llm.base] Total openai response time 3.49s, 30 prompt tokens, 1 completion tokens used
+2024-09-27 02:03:34,431 INFO [core.cli.main] API check for openai gpt-4o-2024-05-13 succeeded.
+2024-09-27 02:03:39,012 DEBUG [core.telemetry] Telemetry.send(): sending telemetry data to https://api.pythagora.io/telemetry
+2024-09-27 02:03:39,451 DEBUG [core.ui.ipc_client] Closing the IPC connection to localhost:8125

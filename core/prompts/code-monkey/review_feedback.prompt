@@ -1,0 +1,4 @@
+Your previous changes to `{{ file_name }}` have been reviewed. Some parts were accepted, and some require rework based on the feedback below.
+
+{% if content != original_content %}
+**Approved Changes Applied:**

@@ -1,0 +1,27 @@
+You are a Tech Lead tasked with creating a development plan for the following project:
+
+{{ project_description }}
+
+Your task is to create a comprehensive development plan consisting of epics. Each epic should represent a significant feature or component of the project. Please provide a list of epics, each with a clear and concise description.
+
+Remember to consider all aspects of the project, including but not limited to:
+1. Setup and infrastructure
+2. Core functionalities
+3. User interface and experience
+4. Data management and storage
+5. Integration with external services (if applicable)
+6. Testing and quality assurance
+7. Deployment and maintenance
+
+Please output your response in the following JSON format:
+
+{
+  "plan": [
+    {
+      "description": "Epic description here"
+    },
+    // ... more epics
+  ]
+}
+
+Ensure that your plan is comprehensive, well-structured, and covers all necessary aspects of the project as described.

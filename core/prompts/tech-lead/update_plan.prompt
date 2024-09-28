@@ -1,0 +1,62 @@
+You are working on an app called "{{ state.branch.project.name }}".
+
+{% include "partials/project_details.prompt" %}
+
+The development plan for this {{ task_type }} was created and broken down into smaller epics to simplify development.
+
+**Epics completed so far:**
+```
+{% for task in finished_tasks %}
+- Epic #{{ loop.index }}:
+  Description: {{ task.description }}
+
+{% endfor %}
+```
+
+**Epics yet to be implemented:**
+```
+{% for task in state.unfinished_tasks %}
+- Epic #{{ finished_tasks|length + loop.index }}:
+  Description: {{ task.description }}
+
+{% endfor %}
+```
+
+{% if finished_tasks %}
+The last epic you worked on:
+```
+{{ finished_tasks[-1].description }}
+```
+{% endif %}
+
+While working on this last epic, you iterated based on user feedback. Here is a list of all iterations:
+```
+{% for iteration in state.iterations %}
+- Iteration #{{ loop.index }}:
+
+  User feedback: {{ iteration.user_feedback }}
+  Developer solution: {{ iteration.description }}
+{% endfor %}
+```
+
+{% if modified_files|length > 0 %}
+**Files modified during this epic:**
+---start_of_current_files---
+{% for file in modified_files %}
+**{{ file.path }}:**
+
+{% endfor %}
+---end_of_current_files---
+{% endif %}
+
+{% include "partials/project_tasks.prompt" %}
+
+**Instructions:**
+
+- Think step by step about what was accomplished in the last epic and update the development plan if needed.
+- All mentioned iterations were executed and completed successfully, which should be reflected in the updated development plan.
+
+**Output Requirements:**
+
+1. **Updated Current Epic:** Reword or update the description of the current epic, **only if necessary**, based on what has been implemented so far.
+2. **Updated Epics List:** Provide an updated list of epics that still need to be implemented. Consider all current epics, previously finished epics, and everything implemented in this epic. Only include epics that still require implementation.
